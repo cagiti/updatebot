@@ -31,22 +31,11 @@ pipelineConfig:
                 value: /workspace/workspace
               - name: GPG_OPTS
                 value: "--use-agent --pinentry-mode loopback --allow-loopback-pinentry"
-              - name: M2_HOME
-                value: /builder/home/
-              - name: M2
-                value: /builder/home/.m2
+              - name: MAVEN_OPTS
+                value: "-Duser.home=/builder/home"
             steps:
-            - image: jenkinsxio/jx:1.3.1008
-              command: git
-              args:
-              - checkout
-              - master
-            - image: maven:3.6.0-jdk-8-alpine
-              command: mvn
-              args:
-                - clean
-                - install
             - image: alpine:3.8
+              name: make_directories
               command: mkdir
               args:
               - -p
@@ -71,6 +60,12 @@ pipelineConfig:
               - credentials
               - -o
               - /builder/home/.gnupg
+            - image: maven:3.6.0-jdk-8-alpine
+              command: mvn
+              args:
+                - -X
+                - clean
+                - install
             - image: maven:3.6.0-jdk-8-alpine
               command: mvn
               args:
