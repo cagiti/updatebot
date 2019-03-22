@@ -31,22 +31,11 @@ pipelineConfig:
                 value: /workspace/workspace
               - name: GPG_OPTS
                 value: "--use-agent --pinentry-mode loopback --allow-loopback-pinentry"
-              - name: M2_HOME
-                value: /builder/home/
-              - name: M2
-                value: /builder/home/.m2
+              - name: MAVEN_OPTS
+                value: "-Duser.home=/builder/home"
             steps:
-            - image: jenkinsxio/jx:1.3.1008
-              command: git
-              args:
-              - checkout
-              - master
-            - image: maven:3.6.0-jdk-8-alpine
-              command: mvn
-              args:
-                - clean
-                - install
             - image: alpine:3.8
+              name: make_directories
               command: mkdir
               args:
               - -p
@@ -74,8 +63,13 @@ pipelineConfig:
             - image: maven:3.6.0-jdk-8-alpine
               command: mvn
               args:
+                - clean
+                - install
+            - image: maven:3.6.0-jdk-8-alpine
+              command: mvn
+              args:
                 - versions:set
-                - -DnewVersion=${VERSION}
+                - -DnewVersion=${inputs.params.version}
             - image: maven:3.6.0-jdk-8-alpine
               command: mvn
               args:
@@ -88,37 +82,24 @@ pipelineConfig:
                 - -B
                 - -e
                 - -U
-                - -X
                 - install
                 - org.sonatype.plugins:nexus-staging-maven-plugin:1.6.7:deploy
                 - -P
                 - release
                 - -DnexusUrl=https://oss.sonatype.org
                 - -DserverId=oss-sonatype-staging
-            - image: jenkinsxio/jx:1.3.1008
+            - image: gcr.io/jenkinsxio/builder-maven:0.1.320
               command: jx
               args:
               - step
               - nexus
               - release
-            - image: jenkinsxio/jx:1.3.1008
-              command: jx
-              args:
-              - step
-              - tag
-              - --version
-              - ${VERSION}
             - name: update-bot
-              image: gcr.io/jenkinsxio/builder-base:0.0.16
+              image: gcr.io/jenkinsxio/builder-maven:0.1.320
               command: updatebot
               args:
               - push-version
               - --kind
               - docker
               - UPDATEBOT_VERSION
-              - ${VERSION}
-            - name: update-bot
-              image: gcr.io/jenkinsxio/builder-base:0.0.16
-              command: updatebot
-              args:
-              - update
+              - ${inputs.params.version}
