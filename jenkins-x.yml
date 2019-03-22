@@ -44,6 +44,7 @@ pipelineConfig:
             - image: maven:3.6.0-jdk-8-alpine
               command: mvn
               args:
+                - -X
                 - clean
                 - install
             - image: alpine:3.8
