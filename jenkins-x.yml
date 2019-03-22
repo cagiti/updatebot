@@ -77,7 +77,7 @@ pipelineConfig:
               args:
                 - clean
                 - -B
-            - image: maven:3.6.0-jdk-8-alpine
+            - image: gcr.io/jenkinsxio/builder-maven:0.1.320
               command: mvn
               args:
                 - -V
